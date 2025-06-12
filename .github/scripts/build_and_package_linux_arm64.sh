@@ -68,7 +68,7 @@ inspect_and_modify_appimage() {
   mkdir -p extracted_appimage
   ./artifacts/"$OUTPUT_NAME" --appimage-extract > /dev/null
 
-  echo "✏️ Modifying AppRun script..."
+  echo "✏️ Replacing AppRun with custom script..."
   cat <<'EOF' > "${EXTRACTED_DIR}/AppRun"
 #! /usr/bin/env bash
 
@@ -85,12 +85,18 @@ exec "$this_dir"/AppRun.wrapped "$@"
 EOF
   chmod +x "${EXTRACTED_DIR}/AppRun"
 
+  echo "🔗 Ensuring AppRun.wrapped symlink exists..."
+  ln -sf usr/bin/pactus-gui "${EXTRACTED_DIR}/AppRun.wrapped"
+
+  echo "🔗 Ensuring pactus-gui.desktop symlink exists..."
+  ln -sf usr/share/applications/pactus-gui.desktop "${EXTRACTED_DIR}/pactus-gui.desktop"
+
   echo "📁 Creating destination directory for pactus-cli files..."
   mkdir -p "$FINAL_CLI_DEST"
   cp -r "$PACTUS_CLI_DEST"/* "$FINAL_CLI_DEST/"
 
-  echo "🌳 Final extracted AppImage contents:"
-  tree "$EXTRACTED_DIR"
+  echo "🌳 Final extracted AppImage contents with symlinks:"
+  tree -l "$EXTRACTED_DIR"
 }
 
 rebuild_appimage() {
