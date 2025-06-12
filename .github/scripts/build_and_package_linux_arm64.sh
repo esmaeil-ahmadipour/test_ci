@@ -12,6 +12,9 @@ APPDIR="build/linux/arm64/release/bundle"
 APPIMAGE_TOOL="appimagetool-aarch64.AppImage"
 APPIMAGE_URL="https://github.com/AppImage/AppImageKit/releases/download/continuous/${APPIMAGE_TOOL}"
 
+PACTUS_CLI_URL="https://github.com/pactus-project/pactus/releases/download/v1.7.1/pactus-cli_1.7.1_linux_arm64.tar.gz"
+PACTUS_CLI_DEST="lib/src/core/native_resources/linux/"
+
 # --------------------------------------
 # FUNCTIONS
 # --------------------------------------
@@ -19,7 +22,19 @@ APPIMAGE_URL="https://github.com/AppImage/AppImageKit/releases/download/continuo
 install_dependencies() {
   echo "🔧 Installing dependencies..."
   sudo apt-get update
-  sudo apt-get install -y libgtk-3-dev libfuse2 cmake ninja-build wget appstream
+  sudo apt-get install -y libgtk-3-dev libfuse2 cmake ninja-build wget appstream tar
+}
+
+download_and_extract_pactus_cli() {
+  echo "⬇️ Downloading Pactus CLI..."
+  mkdir -p "$PACTUS_CLI_DEST"
+  wget -q "$PACTUS_CLI_URL" -O /tmp/pactus-cli.tar.gz
+
+  echo "📦 Extracting Pactus CLI to $PACTUS_CLI_DEST"
+  tar -xzf /tmp/pactus-cli.tar.gz -C "$PACTUS_CLI_DEST"
+
+  echo "✅ Extracted files:"
+  ls -lh "$PACTUS_CLI_DEST"
 }
 
 build_flutter_linux() {
@@ -50,6 +65,7 @@ package_appimage() {
 # --------------------------------------
 
 install_dependencies
+download_and_extract_pactus_cli
 build_flutter_linux
 download_appimage_tool
 package_appimage
