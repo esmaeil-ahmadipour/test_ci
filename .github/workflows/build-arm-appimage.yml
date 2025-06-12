@@ -3,20 +3,20 @@ name: Build & Release ARM64 AppImage
 on:
   push:
     tags:
-      - 'v*'  # Trigger on tags starting with v, e.g. v1.2.3
-
-permissions:
-  contents: write  # Required for creating or updating releases
+      - 'v*'  # Trigger on version tags like v1.2.3
 
 jobs:
-  build-arm:
-    runs-on: ubuntu-22.04-arm  # native ARM64 hosted runner
+  build-and-release-arm64:
+    runs-on: ubuntu-22.04-arm
+
+    permissions:
+      contents: write  # Required to create/upload GitHub releases
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Flutter 3.22.0 from source
+      - name: Install Flutter 3.22.0
         run: |
           git clone https://github.com/flutter/flutter.git --branch 3.22.0 --depth 1
           echo "$PWD/flutter/bin" >> $GITHUB_PATH
@@ -25,34 +25,39 @@ jobs:
           flutter config --enable-linux-desktop
           flutter precache --linux
 
-      - name: Install dependencies & build Flutter Linux
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libfuse2 cmake ninja-build wget appstream
 
-      - name: Build Flutter Linux ARM64 App
+      - name: Build Flutter app for Linux ARM64
         run: |
           flutter pub get
           flutter build linux --release --target-platform=linux-arm64
 
-      - name: Package AppImage
+      - name: Download AppImage tool
         run: |
           wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage
           chmod +x appimagetool-aarch64.AppImage
-          APPDIR=build/linux/arm64/release/bundle
-          cp linux/pactus_gui.desktop $APPDIR/
-          cp linux/pactus_gui.png $APPDIR/
-          ./appimagetool-aarch64.AppImage "$APPDIR" pactus_gui-aarch64.AppImage
-          mkdir -p artifacts
-          mv pactus_gui-aarch64.AppImage artifacts/
 
-      - name: Create or update GitHub release and upload AppImage
+      - name: Package AppImage with tag-based filename
+        run: |
+          TAG_NAME="${GITHUB_REF##*/}"
+          OUTPUT_NAME="PactusGUI-${TAG_NAME}-linux-arm64.AppImage"
+          APPDIR=build/linux/arm64/release/bundle
+          cp linux/pactus_gui.desktop "$APPDIR/"
+          cp linux/pactus_gui.png "$APPDIR/"
+          ./appimagetool-aarch64.AppImage "$APPDIR" "$OUTPUT_NAME"
+          mkdir -p artifacts
+          mv "$OUTPUT_NAME" artifacts/
+
+      - name: Upload AppImage to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: "${{ github.ref_name }}"
+          name: "${{ github.ref_name }}"
           body: "Automated release for ${{ github.ref_name }}"
-          files: artifacts/pactus_gui-aarch64.AppImage
+          files: "artifacts/PactusGUI-${{ github.ref_name }}-linux-arm64.AppImage"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
