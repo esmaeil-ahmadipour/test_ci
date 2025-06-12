@@ -39,16 +39,16 @@ jobs:
           APPDIR=build/linux/arm64/release/bundle
           cp linux/pactus_gui.desktop $APPDIR/
           cp linux/pactus_gui.png $APPDIR/
-          ls -l $APPDIR
-          ./appimagetool-aarch64.AppImage "$APPDIR"
-          ls -l *.AppImage
+          ./appimagetool-aarch64.AppImage "$APPDIR" pactus_gui-aarch64.AppImage
+          ls -l pactus_gui-aarch64.AppImage
+
 
       - name: Upload AppImage to Release (create if missing)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME=${GITHUB_REF##*/}  # e.g. v0.0.9
-          APPIMAGE_FILE=$(ls *.AppImage)
+          TAG_NAME=${GITHUB_REF##*/}  # e.g. v0.0.10
+          APPIMAGE_FILE="pactus_gui-aarch64.AppImage"
 
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
             echo "Release $TAG_NAME exists. Uploading artifact..."
