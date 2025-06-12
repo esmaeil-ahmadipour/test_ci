@@ -65,10 +65,18 @@ package_appimage() {
 
 inspect_and_modify_appimage() {
   echo "🔍 Extracting AppImage..."
-  mkdir -p extracted_appimage
+
+  # Extract AppImage
   ./artifacts/"$OUTPUT_NAME" --appimage-extract > /dev/null
 
-  echo "✏️ Replacing AppRun with custom script..."
+  # Move extracted contents into extracted_appimage dir
+  mkdir -p extracted_appimage
+  if [ -d squashfs-root ]; then
+    mv squashfs-root extracted_appimage/
+  fi
+
+  echo "✏️ Creating custom AppRun script..."
+  mkdir -p "${EXTRACTED_DIR}"
   cat <<'EOF' > "${EXTRACTED_DIR}/AppRun"
 #! /usr/bin/env bash
 
@@ -85,10 +93,8 @@ exec "$this_dir"/AppRun.wrapped "$@"
 EOF
   chmod +x "${EXTRACTED_DIR}/AppRun"
 
-  echo "🔗 Ensuring AppRun.wrapped symlink exists..."
+  echo "🔗 Creating symlinks..."
   ln -sf usr/bin/pactus-gui "${EXTRACTED_DIR}/AppRun.wrapped"
-
-  echo "🔗 Ensuring pactus-gui.desktop symlink exists..."
   ln -sf usr/share/applications/pactus-gui.desktop "${EXTRACTED_DIR}/pactus-gui.desktop"
 
   echo "📁 Creating destination directory for pactus-cli files..."
@@ -98,6 +104,7 @@ EOF
   echo "🌳 Final extracted AppImage contents with symlinks:"
   tree -l "$EXTRACTED_DIR"
 }
+
 
 rebuild_appimage() {
   echo "🔄 Rebuilding AppImage..."
