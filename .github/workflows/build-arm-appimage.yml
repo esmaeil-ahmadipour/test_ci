@@ -15,7 +15,7 @@ jobs:
 
       - name: Install Flutter 3.22.0 from source
         run: |
-          git clone https://github.com/flutter/flutter.git --branch 3.22.0 --depth 1
+          git clone https://github.com/flutter/flutter.git --branch 3.23.3 --depth 1
           echo "$PWD/flutter/bin" >> $GITHUB_PATH
           export PATH="$PWD/flutter/bin:$PATH"
           flutter doctor -v
