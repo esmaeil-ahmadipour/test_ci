@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'  # Trigger on version tags like v1.2.3
 
+env:
+  FLUTTER_VERSION: 3.22.0
+  TARGET_OS: linux # example `linux` , `windows` , `macos`
+  ARCH: arm64 # example `arm64`
+
 jobs:
   build-and-release-arm64:
     runs-on: ubuntu-22.04-arm
@@ -16,17 +21,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Flutter 3.22.0
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         run: |
-          git clone https://github.com/flutter/flutter.git --branch 3.22.0 --depth 1
+          git clone https://github.com/flutter/flutter.git --branch ${{ env.FLUTTER_VERSION }} --depth 1
           echo "$PWD/flutter/bin" >> $GITHUB_PATH
           export PATH="$PWD/flutter/bin:$PATH"
           flutter doctor -v
-          flutter config --enable-linux-desktop
-          flutter precache --linux
+          flutter config --enable-${{ env.TARGET_OS }}-desktop
+          flutter precache --${{ env.TARGET_OS }}
 
       - name: Run local build script
-        run: chmod +x .github/scripts/build_and_package.sh && .github/scripts/build_and_package.sh ${{ github.ref_name }}
+        run: chmod +x .github/scripts/build_and_package_${{ env.TARGET_OS }}_${{ env.ARCH }}.sh && .github/scripts/build_and_package_${{ env.TARGET_OS }}_${{ env.ARCH }}.sh ${{ github.ref_name }}
 
 
       - name: Upload AppImage to GitHub Release
@@ -35,7 +40,7 @@ jobs:
           tag_name: "${{ github.ref_name }}"
           name: "${{ github.ref_name }}"
           body: "Automated release for ${{ github.ref_name }}"
-          files: "artifacts/PactusGUI-${{ github.ref_name }}-linux-arm64.AppImage"
+          files: "artifacts/PactusGUI-${{ github.ref_name }}-${{ env.TARGET_OS }}-${{ env.ARCH }}.AppImage"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
