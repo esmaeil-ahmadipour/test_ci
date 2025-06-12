@@ -42,10 +42,12 @@ download_and_extract_pactus_cli() {
   echo "⬇️ Downloading pactus-cli..."
   wget -q "$PACTUS_CLI_URL" -O pactus-cli.tar.gz
 
-  echo "📦 Inspecting and extracting pactus-cli..."
+  echo "🧹 Cleaning previous extracted files (if any)..."
+  rm -rf "$PACTUS_CLI_DEST"
   mkdir -p "$PACTUS_CLI_DEST"
 
-  TOP_LEVEL=$(tar -tzf pactus-cli.tar.gz | head -1 | cut -d/ -f1)
+  echo "📦 Inspecting and extracting pactus-cli..."
+  TOP_LEVEL=$(tar -tzf pactus-cli.tar.gz | head -1 | cut -d/ -f1 || true)
 
   if tar -tzf pactus-cli.tar.gz | grep -q "^${TOP_LEVEL}/"; then
     echo "📁 Detected top-level folder: $TOP_LEVEL"
