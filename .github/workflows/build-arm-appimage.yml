@@ -13,11 +13,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Flutter 3.22.0
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.0'
-          channel: stable
+      - name: Install Flutter 3.22.0 from source
+        run: |
+          git clone https://github.com/flutter/flutter.git --branch 3.22.0 --depth 1
+          echo "$PWD/flutter/bin" >> $GITHUB_PATH
+          export PATH="$PWD/flutter/bin:$PATH"
+          flutter doctor -v
+          flutter config --enable-linux-desktop
+          flutter precache --linux
 
       - name: Install dependencies & build Flutter Linux
         run: |
