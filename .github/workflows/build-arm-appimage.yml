@@ -41,33 +41,21 @@ jobs:
           cp linux/pactus_gui.png $APPDIR/
           ls -l $APPDIR
           ./appimagetool-aarch64.AppImage "$APPDIR"
+          ls -l *.AppImage
 
-
-      - name: Check if release exists
+      - name: Upload AppImage to Release
         id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref_name }}" | jq -r '.id')
-          if [ "$RELEASE_ID" = "null" ]; then
-            echo "Release not found"
-            echo "exists=false" >> $GITHUB_OUTPUT
+          TAG_NAME=${GITHUB_REF##*/}  # Extract tag from refs/tags/v1.0.0
+          APPIMAGE_FILE=$(ls *.AppImage)
+
+          # Check if release exists
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            echo "Release $TAG_NAME exists. Uploading artifact..."
+            gh release upload "$TAG_NAME" "$APPIMAGE_FILE" --clobber
           else
-            echo "Release found: $RELEASE_ID"
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME does not exist. Skipping upload."
+            exit 1
           fi
-
-      - name: Upload AppImage to existing Release
-        if: steps.check_release.outputs.exists == 'true'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ github.ref_name }}
-          artifacts: '*.AppImage'
-          allowUpdates: true
-          overwrite: true
-
-      - name: Upload fallback artifact
-        if: steps.check_release.outputs.exists != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-arm-appimage
-          path: '*.AppImage'
