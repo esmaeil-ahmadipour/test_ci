@@ -46,17 +46,16 @@ download_and_extract_pactus_cli() {
   rm -rf "$PACTUS_CLI_DEST"
   mkdir -p "$PACTUS_CLI_DEST"
 
-  echo "📦 Inspecting and extracting pactus-cli..."
-  TOP_LEVEL=$(tar -tzf pactus-cli.tar.gz | head -1 | cut -d/ -f1 || true)
-
-  if tar -tzf pactus-cli.tar.gz | grep -q "^${TOP_LEVEL}/"; then
-    echo "📁 Detected top-level folder: $TOP_LEVEL"
-    tar -xzf pactus-cli.tar.gz --strip-components=1 -C "$PACTUS_CLI_DEST"
-  else
-    echo "📄 No top-level folder found, extracting as-is..."
-    tar -xzf pactus-cli.tar.gz -C "$PACTUS_CLI_DEST"
-  fi
+  echo "📦 Inspecting tar contents and extracting only files..."
+  # لیست فایل‌ها (بدون فولدر) را استخراج کن و فقط فایل‌ها را استخراج کن
+  tar -tzf pactus-cli.tar.gz | grep -v '/$' | while read -r file; do
+    # استخراج هر فایل به مسیر مقصد بدون فولدرهای بالاتر
+    # --strip-components=number را برای حذف مسیر بالاتر استفاده میکنیم
+    # اما چون ممکنه هر فایل مسیر داشته باشه، بهترین کار اینه همه فایل‌ها رو مستقیم کپی کنیم:
+    tar -xzf pactus-cli.tar.gz --strip-components=$(echo "$file" | grep -o "/" | wc -l) -C "$PACTUS_CLI_DEST" "$file"
+  done
 }
+
 
 package_appimage() {
   echo "📦 Packaging AppImage as ${OUTPUT_NAME}..."
