@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # Trigger on tags starting with v, e.g. v1.2.3
 
+permissions:
+  contents: write  # Required for creating or updating releases
+
 jobs:
   build-arm:
     runs-on: ubuntu-22.04-arm  # native ARM64 hosted runner
